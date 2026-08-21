@@ -2,7 +2,7 @@
 
 Open `index.html` in any modern browser to access the website
 
-
+![image alt](https://github.com/sapru935-oss/Moneta/blob/d5cbf8145a15115b4a9218c0ee4296982abc6f81/Screenshot%202026-08-22%20032304.png)
 
 
 Included:
