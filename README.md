@@ -1,6 +1,9 @@
 # Moneta — Personal Finance Optimiser
 
-Open `index.html` in any modern browser.
+Open `index.html` in any modern browser to access the website
+
+
+
 
 Included:
 - Dynamic monthly allocation engine
@@ -16,4 +19,4 @@ Included:
 - Responsive dashboard
 - INR-first design
 
-This is a student-project prototype, not regulated financial advice.
+
