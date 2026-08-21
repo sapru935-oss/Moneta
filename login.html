@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moneta — Login</title>
+<style>
+:root{--bg:#D4DE95;--moss:#636B2F;--deep:#3D4127;--purple:#692475;--lav:#A47DAB;--cream:#F7F8E9}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--deep);font-family:Inter,system-ui,sans-serif;display:grid;place-items:center;padding:20px}
+.wrap{width:min(440px,100%)}.brand{text-align:center;font-size:28px;font-weight:850;letter-spacing:-1px;margin-bottom:22px}.brand span{color:var(--purple)}
+.card{background:var(--moss);border-radius:24px;padding:30px;box-shadow:0 25px 60px rgba(61,65,39,.2);color:var(--cream)}
+.eyebrow{font-size:10px;letter-spacing:1.7px;text-transform:uppercase;color:#D4DE95;font-weight:800}
+h1{font-size:29px;margin:8px 0}.sub{font-size:13px;color:#E8ECC5;line-height:1.55;margin-bottom:23px}
+.field{margin:14px 0}.field label{display:block;font-size:11px;color:#E8ECC5;margin-bottom:6px}
+.field input{width:100%;padding:12px;border:1px solid rgba(247,248,233,.25);border-radius:10px;background:#3D4127;color:#F7F8E9;outline:none}
+.field input:focus{border-color:#A47DAB;box-shadow:0 0 0 3px rgba(164,125,171,.2)}
+.btn{width:100%;border:0;border-radius:11px;padding:12px;margin-top:10px;background:var(--purple);color:#fff;font-weight:750;cursor:pointer;transition:.2s}
+.btn:hover{background:var(--lav);color:var(--deep);transform:translateY(-2px)}
+.demo{text-align:center;font-size:10px;color:#D4DE95;margin-top:14px}.error{color:#D4DE95;font-size:11px;margin-top:8px;display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Mon<span>eta</span></div>
+  <div class="card">
+    <div class="eyebrow">Personal Finance Optimiser</div>
+    <h1>Welcome back.</h1>
+    <div class="sub">Sign in to access your personalised financial overview and optimisation tools.</div>
+    <form id="loginForm">
+      <div class="field"><label>Email</label><input id="email" type="email" placeholder="you@example.com" required></div>
+      <div class="field"><label>Password</label><input id="password" type="password" placeholder="••••••••" required></div>
+      <div class="error" id="error">Please enter your email and password.</div>
+      <button class="btn" type="submit">Login to Moneta</button>
+    </form>
+    <div class="demo">Demo login · any valid email + 4+ character password</div>
+  </div>
+</div>
+<script>
+document.getElementById("loginForm").addEventListener("submit",function(e){
+  e.preventDefault();
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+  if(!email || password.length<4){
+    document.getElementById("error").style.display="block"; return;
+  }
+  localStorage.setItem("monetaLoggedIn","true");
+  localStorage.setItem("monetaUser",email);
+  window.location.assign("overview.html");
+});
+</script>
+</body>
+</html>

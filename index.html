@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moneta — Personal Finance Optimiser</title>
+<style>
+:root{
+  --bg:#D4DE95;
+  --surface:#636B2F;
+  --surface-soft:#636B2F;
+  --surface-strong:#3D4127;
+  --ink:#3D4127;
+  --ink-soft:#59603B;
+  --line:rgba(61,65,39,.18);
+  --primary:#636B2F;
+  --primary-dark:#3D4127;
+  --accent:#D4DE95;
+  --success:#636B2F;
+  --danger:#7B4A3E;
+  --warning:#8A6B2F;
+  --white:#F7F8E9;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#D4DE95;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{overflow-x:hidden;background:#D4DE95}
+button,input,select{font:inherit}
+button{cursor:pointer}
+
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;
+  background:
+    radial-gradient(circle at 10% 10%,rgba(247,248,233,.65),transparent 24%),
+    radial-gradient(circle at 88% 82%,rgba(186,192,149,.45),transparent 28%);
+}
+
+/* ---------- Sliding navigation ---------- */
+.sidebar{
+  position:fixed;z-index:40;left:0;top:0;width:285px;height:100vh;
+  padding:28px 18px;background:var(--bg);
+  border-right:1px solid var(--line);
+  box-shadow:18px 0 45px rgba(61,65,39,.16);
+  transform:translateX(-102%);
+  transition:transform .38s cubic-bezier(.2,.85,.2,1);
+}
+.sidebar.open{transform:translateX(0)}
+.logo{
+  font-size:25px;font-weight:850;letter-spacing:-1.2px;padding:4px 12px 28px;
+}
+.logo span{color:var(--primary-dark)}
+.logo div{color:var(--ink-soft)!important}
+
+.nav small{
+  display:block;color:var(--ink-soft);text-transform:uppercase;font-size:10px;
+  font-weight:750;letter-spacing:1.7px;padding:20px 13px 7px;
+}
+.nav button{
+  width:100%;border:1px solid transparent;background:transparent;color:var(--ink-soft);
+  text-align:left;padding:13px 15px;border-radius:13px;margin:3px 0;
+  transition:all .22s ease;
+}
+.nav button:hover{
+  background:var(--surface-soft);color:var(--primary-dark);
+  border-color:var(--line);transform:translateX(7px);
+  box-shadow:0 8px 18px rgba(61,65,39,.10);
+}
+.nav button.active{
+  background:#636B2F;color:#F7F8E9;
+  border-color:var(--primary-dark);
+  box-shadow:0 9px 20px rgba(61,65,39,.18);
+}
+.profile{
+  position:absolute;bottom:20px;left:18px;right:18px;padding:13px;
+  border:1px solid var(--line);border-radius:14px;background:var(--surface-soft);
+  color:var(--ink-soft);font-size:12px;
+}
+.profile span{color:var(--ink-soft)}
+
+.drawer-toggle{
+  position:fixed;z-index:50;left:18px;top:18px;width:44px;height:44px;
+  border:1px solid var(--line);border-radius:13px;background:var(--bg);
+  color:var(--primary-dark);font-size:19px;
+  box-shadow:0 8px 20px rgba(61,65,39,.13);
+  transition:all .2s ease;
+}
+.drawer-toggle:hover{transform:scale(1.06);background:var(--surface-soft)}
+.drawer-overlay{
+  position:fixed;inset:0;background:rgba(61,65,39,.25);
+  backdrop-filter:blur(2px);z-index:35;display:none;
+}
+.drawer-overlay.show{display:block}
+
+/* ---------- Main layout ---------- */
+.app{display:block;min-height:100vh}
+.main{padding:38px 40px 55px;max-width:1500px;width:100%;margin:auto}
+.top{
+  display:flex;justify-content:space-between;align-items:flex-start;gap:20px;
+  margin-bottom:25px;
+}
+.eyebrow{
+  color:var(--primary-dark);font-size:11px;font-weight:800;
+  letter-spacing:1.6px;text-transform:uppercase;
+}
+h1{font-size:34px;line-height:1.08;margin:8px 0 6px;letter-spacing:-1.4px}
+.sub{color:var(--ink-soft);font-size:14px;max-width:720px;line-height:1.55}
+.actions{display:flex;gap:10px;align-items:center}
+
+.palette-strip{
+  display:flex;width:132px;height:6px;border-radius:99px;overflow:hidden;
+  margin-top:10px;margin-bottom:2px;
+}
+.palette-strip i{flex:1}
+
+/* ---------- Buttons ---------- */
+.btn{
+  border:1px solid var(--line);background:var(--surface-soft);color:var(--ink);
+  padding:10px 14px;border-radius:11px;font-weight:720;
+  transition:all .2s ease;
+}
+.btn:hover{
+  transform:translateY(-2px);background:var(--white);
+  border-color:rgba(99,107,47,.4);
+  box-shadow:0 10px 22px rgba(61,65,39,.14);
+}
+.btn.primary{
+  background:#692475;color:#F7F8E9;border-color:#692475;
+}
+.btn.primary:hover{background:#A47DAB;color:#3D4127}
+
+/* ---------- Cards ---------- */
+.grid{display:grid;gap:16px}
+.metrics{grid-template-columns:repeat(4,1fr)}
+.card{
+  background:#636B2F;
+  border:1px solid rgba(61,65,39,.35);border-radius:20px;padding:19px;
+  box-shadow:0 13px 35px rgba(61,65,39,.09);
+  transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;
+}
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 20px 45px rgba(61,65,39,.15);
+  border-color:rgba(61,65,39,.30);
+}
+.metric-label{color:#E8ECC5;font-size:12px;font-weight:600}
+.metric{font-size:28px;font-weight:850;margin:8px 0;color:#F7F8E9}
+.delta{font-size:12px;color:var(--primary-dark);font-weight:650}
+.delta.warn{color:var(--warning)}
+.delta.bad{color:var(--danger)}
+.two{grid-template-columns:1.35fr .9fr;margin-top:16px}
+.three{grid-template-columns:1fr 1fr 1fr;margin-top:16px}
+.card h2{font-size:16px;margin:0 0 5px;color:#F7F8E9}
+.card p{color:#E8ECC5;font-size:12px;margin:4px 0 16px;line-height:1.5}
+
+/* ---------- Charts ---------- */
+.chart{height:220px;position:relative;padding:12px 0 22px}
+.bars{
+  height:180px;display:flex;align-items:flex-end;gap:10px;
+  border-bottom:1px solid rgba(61,65,39,.28);
+  border-left:1px solid rgba(61,65,39,.28);padding:0 8px;
+}
+.barwrap{flex:1;height:100%;display:flex;align-items:flex-end;gap:3px;position:relative}
+.bar{width:50%;border-radius:6px 6px 0 0;min-height:3px}
+.bar.a{background:#692475}
+.bar.b{background:#A47DAB}
+.xlabel{position:absolute;bottom:-21px;font-size:10px;color:var(--ink-soft);left:50%;transform:translateX(-50%)}
+.legend{display:flex;gap:15px;font-size:11px;color:var(--ink-soft);margin-top:8px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
+.green{background:#692475}.blue{background:#A47DAB}
+
+/* ---------- Health score ---------- */
+.health{display:flex;align-items:center;gap:18px}
+.score{
+  width:106px;height:106px;border-radius:50%;display:grid;place-items:center;
+  background:conic-gradient(#692475 var(--score),#A47DAB 0);
+  position:relative;
+}
+.score:after{content:"";position:absolute;inset:9px;background:var(--surface);border-radius:50%}
+.score strong{position:relative;z-index:2;font-size:28px}
+.scorebox{font-size:12px;color:var(--ink-soft);line-height:1.6}
+.scorebox b{color:var(--ink)}
+
+/* ---------- Progress / goals ---------- */
+.progress{height:8px;background:rgba(61,65,39,.15);border-radius:20px;overflow:hidden;margin:10px 0}
+.progress>i{display:block;height:100%;background:linear-gradient(90deg,#A47DAB,#692475);border-radius:20px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.goal{padding:13px 0;border-bottom:1px solid rgba(61,65,39,.13)}
+.goal:last-child{border-bottom:0}
+.goal-name{font-weight:750;font-size:13px}
+.tiny{font-size:11px;color:#E8ECC5}
+
+.reco{
+  border:1px solid var(--line);background:#BAC095;
+  border-radius:13px;padding:13px;margin-top:9px;transition:all .2s ease;
+}
+.reco:hover{background:#BAC095;transform:translateY(-2px);box-shadow:0 8px 18px rgba(61,65,39,.08)}
+.reco strong{font-size:12px}
+.reco p{margin:5px 0 0;font-size:11px}
+
+.badge{
+  font-size:10px;border-radius:999px;padding:4px 7px;
+  background:#D4DE95;color:#3D4127;font-weight:750;
+}
+.badge.good{background:#BAC095;color:#3D4127}
+.badge.warn{background:#D4DE95;color:#3D4127}
+
+/* ---------- Tables ---------- */
+.table{width:100%;border-collapse:collapse;font-size:12px}
+.table th,.table td{padding:10px 6px;border-bottom:1px solid rgba(61,65,39,.14);text-align:left}
+.table th{color:var(--ink-soft);font-weight:700}
+.right{text-align:right!important}
+
+/* ---------- Tabs / forms ---------- */
+.tabs{display:flex;gap:7px;margin-bottom:15px}
+.tab{
+  padding:9px 12px;border:1px solid var(--line);border-radius:9px;
+  background:var(--surface-soft);color:var(--ink-soft);
+}
+.tab.active{color:#F7F8E9;background:var(--primary)}
+.field label{display:block;color:var(--ink-soft);font-size:11px;margin-bottom:6px}
+.field input,.field select{
+  width:100%;background:var(--bg);border:1px solid var(--line);
+  color:var(--ink);border-radius:9px;padding:10px;outline:none;
+}
+.field input:focus,.field select:focus{
+  border-color:var(--primary);box-shadow:0 0 0 3px rgba(99,107,47,.12);
+}
+
+/* ---------- Modal ---------- */
+.modal{
+  position:fixed;inset:0;background:rgba(61,65,39,.35);
+  display:none;align-items:center;justify-content:center;padding:20px;z-index:60;
+}
+.modal.open{display:flex}
+.modalbox{
+  width:min(720px,100%);background:var(--bg);
+  border:1px solid var(--line);border-radius:20px;padding:22px;
+  max-height:90vh;overflow:auto;box-shadow:0 25px 70px rgba(61,65,39,.22);
+}
+.close{float:right;border:0;background:transparent;color:var(--ink-soft);font-size:23px}
+.scenario-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:16px}
+.scenario-output{min-height:270px}
+.big{font-size:35px;font-weight:850}
+.pillrow{display:flex;gap:7px;flex-wrap:wrap}
+.pill{padding:7px 9px;border-radius:9px;background:var(--surface-soft);color:var(--ink-soft);font-size:11px}
+.alert{padding:11px;border-radius:10px;background:#E6DCCB;border:1px solid rgba(123,74,62,.25);color:#6C4439;font-size:12px;margin-bottom:12px}
+.notification{padding:13px;border-radius:12px;border:1px solid var(--line);margin:9px 0;background:var(--surface-soft)}
+.notification.high{border-color:rgba(123,74,62,.35);background:#E6DCCB}
+.notification.medium{border-color:rgba(138,107,47,.35);background:#EDE7C9}
+.notification.low{border-color:var(--line);background:var(--surface-soft)}
+.notification strong{font-size:12px}
+.notification p{margin:5px 0 0;font-size:11px}
+.footer{text-align:center;color:var(--ink-soft);font-size:11px;margin-top:30px}
+
+@media(max-width:1000px){
+  .main{padding:30px 24px 45px}
+  .metrics{grid-template-columns:1fr 1fr}
+  .two,.three,.scenario-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .main{padding:24px 15px 40px}
+  .metrics{grid-template-columns:1fr}
+  .top{flex-direction:column}
+  .actions{width:100%}.actions .btn{flex:1}
+  .sidebar{width:84%;max-width:300px}
+}
+
+/* ---------- Contrast pass ---------- */
+.card,
+.card h2,
+.card .metric,
+.card .metric-label,
+.card p,
+.card .tiny,
+.card .goal-name,
+.card .right,
+.card .table td,
+.card .table th{
+  /* Card text is intentionally light because cards are #636B2F. */
+}
+.card h2,
+.card .metric{color:#F7F8E9}
+.card p,
+.card .metric-label,
+.card .tiny,
+.card .table th{color:#E8ECC5}
+.card .table td{color:#F7F8E9}
+
+.reco{
+  color:#3D4127;
+}
+.reco strong{color:#3D4127}
+.reco p{color:#59603B}
+
+.nav button{color:#3D4127}
+.nav button:hover{color:#3D4127}
+.nav button.active{color:#F7F8E9}
+
+.btn{color:#3D4127}
+.btn:hover{color:#3D4127}
+.btn.primary{color:#F7F8E9}
+.btn.primary:hover{color:#3D4127}
+
+.palette-strip + *{}
+.legend{color:#3D4127}
+.xlabel{color:#59603B}
+
+.score strong{color:#F7F8E9}
+.scorebox{color:#E8ECC5}
+.scorebox b{color:#F7F8E9}
+
+.pill{color:#3D4127}
+.badge{color:#3D4127}
+.badge.good{color:#3D4127}
+.badge.warn{color:#3D4127}
+
+.field label{color:#3D4127}
+.field input,.field select{color:#3D4127;background:#D4DE95}
+.field input::placeholder{color:#59603B}
+
+.modalbox{color:#3D4127}
+.modalbox h2{color:#3D4127}
+.modalbox p{color:#59603B}
+.close{color:#3D4127}
+
+.notification{color:#3D4127}
+.notification strong{color:#3D4127}
+.notification p{color:#59603B}
+.notification.high,
+.notification.medium,
+.notification.low{color:#3D4127}
+
+.footer{color:#59603B}
+.eyebrow{color:#3D4127}
+.sub{color:#59603B}
+
+.profile{color:#3D4127}
+.profile span{color:#59603B}
+
+.big{color:#F7F8E9}
+
+
+/* ---------- Page-based navigation ---------- */
+.section{display:none;animation:pageIn .28s ease both}
+.section.active{display:block}
+@keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.page-empty{min-height:62vh;display:flex;align-items:center;justify-content:center;text-align:center}
+.page-empty-inner{max-width:620px}
+.page-empty h1{font-size:46px;margin:12px 0 10px}
+.page-empty p{font-size:15px;color:#59603B;line-height:1.7}
+.page-kicker{display:inline-flex;padding:7px 11px;border-radius:999px;background:#636B2F;color:#F7F8E9;font-size:10px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase}
+.connection-card{cursor:pointer}
+.connection-card:hover{background:#BAC095}
+
+</style>
+</head>
+<body>
+<button class="drawer-toggle" onclick="toggleDrawer()" aria-label="Open navigation">☰</button><div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div><div class="app">
+<aside class="sidebar">
+  <div class="logo">Mon<span>eta</span><div style="font-size:10px;color:#59728d;font-weight:500;margin-top:4px">PERSONAL FINANCE OPTIMISER</div></div>
+  <div class="nav">
+    <small>Workspace</small>
+    <button class="active" data-page="dashboard" onclick="window.location.href='overview.html'">Overview</button>
+    <button data-page="optimizer">Optimiser</button>
+    <button data-page="scenarios">What‑If Lab</button>
+    <button data-page="goals">Goals</button>
+    <button data-page="debts">Debt Strategy</button>
+    <button data-page="insights" onclick="window.location.href=\'insights.html\'">Insights</button>
+    <small>Connections</small>
+    <button data-page="connections">Connect accounts</button>
+    <button data-page="investments">Stocks & mutual funds</button>
+    <small>Alerts</small>
+    <button data-page="notifications">Notifications <span id="alertCount" class="badge warn" style="float:right">0</span></button>
+  </div>
+  <div class="profile">Demo profile · INR<br><span>Data stays in your browser</span></div>
+</aside>
+
+<main class="main">
+<section id="dashboard" class="section active">
+<div class="page-empty">
+  <div class="page-empty-inner">
+    <div class="page-kicker">Moneta · Personal Finance Optimiser</div>
+    <h1>Your financial command centre.</h1>
+    <p>Welcome to Moneta. Your detailed financial tools are intentionally kept out of the home page. Open the sliding sidebar and choose exactly what you want to work on — optimisation, goals, debt, scenarios, investments or account connections.</p>
+    <button type="button" class="btn primary" id="openSidebarHome" onclick="window.location.href='/login.html'">Explore your finances</button>
+  </div>
+</div>
+</section>
+
+<section id="optimizer" class="section">
+<div class="top"><div><div class="eyebrow">Core engine</div><h1>Optimiser</h1><div class="sub">Mathematical allocation across savings, investments, debt, emergency reserves and goals.</div></div><button class="btn primary" onclick="runOptimisation()">Recalculate plan ✦</button></div>
+<div class="grid two">
+ <div class="card"><h2>Recommended monthly allocation</h2><p>Optimised from your income, expenses, rates, deadlines and risk profile.</p><div id="optTable"></div></div>
+ <div class="card"><h2>Why this plan?</h2><p>Explainable decisions — useful for a project demo and real users.</p><div id="whyPlan"></div></div>
+</div>
+<div class="grid three">
+ <div class="card"><h2>Risk constraints</h2><div id="riskBox"></div></div>
+ <div class="card"><h2>Goal deadlines</h2><div id="deadlineBox"></div></div>
+ <div class="card"><h2>Opportunity cost</h2><div id="opportunity"></div></div>
+</div>
+</section>
+
+<section id="scenarios" class="section">
+<div class="top"><div><div class="eyebrow">Decision simulator</div><h1>What‑If Lab</h1><div class="sub">Stress-test the plan before life changes it for you.</div></div></div>
+<div class="scenario-grid">
+ <div class="card"><h2>Change one thing</h2><p>See the impact on runway, goals and wealth.</p>
+   <div class="field" style="margin:13px 0"><label>Scenario</label><select id="scenarioType" onchange="runScenario()"><option value="incomeDown">Income drops 20%</option><option value="expenseUp">Expenses rise 25%</option><option value="rateUp">Debt rate rises 3%</option><option value="medical">Unexpected ₹50,000 expense</option><option value="goalEarly">Goal deadline moves 3 months earlier</option><option value="incomeUp">Income increases 15%</option></select></div>
+   <button class="btn primary" onclick="runScenario()">Simulate scenario</button>
+   <div class="pillrow" style="margin-top:15px"><span class="pill">Monte-Carlo ready</span><span class="pill">Stress testing</span><span class="pill">Goal impact</span></div>
+ </div>
+ <div class="card scenario-output"><h2>Scenario result</h2><p>Compared with your current plan.</p><div id="scenarioResult"></div></div>
+</div>
+<div class="card" style="margin-top:15px"><h2>Scenario history</h2><p>Your recent simulations are stored locally for the demo.</p><div id="scenarioHistory"></div></div>
+</section>
+
+<section id="goals" class="section">
+<div class="top"><div><div class="eyebrow">Life planning</div><h1>Goals</h1><div class="sub">Optimise around what the money is meant to accomplish.</div></div><button class="btn primary" onclick="addGoal()">+ Add goal</button></div>
+<div class="card"><table class="table"><thead><tr><th>Goal</th><th>Target</th><th>Saved</th><th>Deadline</th><th>Monthly need</th><th>Status</th></tr></thead><tbody id="goalTable"></tbody></table></div>
+</section>
+
+<section id="debts" class="section">
+<div class="top"><div><div class="eyebrow">Debt strategy</div><h1>Debt Payoff Lab</h1><div class="sub">Compare avalanche vs snowball and see the interest/time trade-off.</div></div></div>
+<div class="grid two">
+ <div class="card"><h2>Debt portfolio</h2><div id="debtTable"></div></div>
+ <div class="card"><h2>Recommended payoff order</h2><div id="debtPlan"></div></div>
+</div>
+</section>
+
+<section id="insights" class="section">
+<div class="top"><div><div class="eyebrow">Explainable intelligence</div><h1>Insights</h1><div class="sub">Actionable signals generated from the same optimisation model.</div></div></div>
+<div class="grid two">
+ <div class="card"><h2>Financial intelligence</h2><div id="insightList"></div></div>
+ <div class="card"><h2>Uniqueness layer</h2>
+  <div class="reco"><strong>🧠 Explainable optimisation</strong><p>Every recommendation shows the constraint or trade-off behind it.</p></div>
+  <div class="reco"><strong>🌪 Shock-aware planning</strong><p>Simulate salary cuts, expense shocks, rate changes and deadline compression.</p></div>
+  <div class="reco"><strong>📈 Future-first score</strong><p>Health is measured by resilience + progress + affordability, not account balance alone.</p></div>
+  <div class="reco"><strong>🔒 Privacy-first demo</strong><p>No bank credentials. All inputs are stored locally in this browser.</p></div>
+ </div>
+</div>
+</section>
+
+<div class="footer">Moneta is a student project prototype. It provides planning calculations, not regulated financial advice.</div>
+</main>
+</div>
+
+
+
+<section id="connections" class="section">
+<div class="top"><div><div class="eyebrow">Connections</div><h1>Connect accounts</h1><div class="sub">Bring your financial picture together. This prototype uses demo connections; a production version can use a secure read-only financial data provider.</div></div></div>
+<div class="grid three">
+ <div class="card connection-card" onclick="connectSource('Bank')"><h2>Bank accounts</h2><p>Connect savings, salary and current accounts.</p><span class="badge" id="bankStatusPage">Not connected</span></div>
+ <div class="card connection-card" onclick="connectSource('Stocks')"><h2>Stocks</h2><p>Bring holdings and market value into your net-worth model.</p><span class="badge" id="stockStatusPage">Not connected</span></div>
+ <div class="card connection-card" onclick="connectSource('Mutual Funds')"><h2>Mutual funds</h2><p>Track funds, allocation and goal-linked investments.</p><span class="badge" id="mfStatusPage">Not connected</span></div>
+</div>
+<div class="card" style="margin-top:16px"><h2>Privacy-first connection design</h2><p>Use read-only permissions wherever possible. Never store bank passwords, card PINs or OTPs in Moneta.</p></div>
+</section>
+
+<section id="investments" class="section">
+<div class="top"><div><div class="eyebrow">Portfolio</div><h1>Stocks & Mutual Funds</h1><div class="sub">A dedicated investment view, separate from the optimisation engine.</div></div><button class="btn primary" onclick="openConnections('stocks')">Connect investments</button></div>
+<div class="grid three">
+ <div class="card"><div class="metric-label">Portfolio value</div><div class="metric" id="portfolioValue">₹0</div><div class="delta">Connect an account to import holdings</div></div>
+ <div class="card"><div class="metric-label">Stocks</div><div class="metric" id="stockCount">0</div><div class="delta">Demo portfolio</div></div>
+ <div class="card"><div class="metric-label">Mutual funds</div><div class="metric" id="mfCount">0</div><div class="delta">Demo portfolio</div></div>
+</div>
+<div class="grid two" style="margin-top:16px">
+ <div class="card"><h2>Investment allocation</h2><p>Allocation will appear here once holdings are connected.</p><div class="reco"><strong>Portfolio-aware optimisation</strong><p>Moneta can use investment exposure as an input when deciding how much new money should go toward investments.</p></div></div>
+ <div class="card"><h2>Risk reminder</h2><p>Investment returns are uncertain. The optimiser compares expected return with guaranteed debt costs and required safety reserves.</p></div>
+</div>
+</section>
+
+<section id="notifications" class="section">
+<div class="top"><div><div class="eyebrow">Alerts</div><h1>Notifications</h1><div class="sub">Warnings become more important as debt payoff dates approach.</div></div></div>
+<div class="card"><div id="notificationListPage"></div></div>
+</section>
+
+<div class="modal" id="connectionsModal"><div class="modalbox">
+<button class="close" onclick="closeConnections()">×</button><div class="eyebrow">Secure connections</div><h2>Connect your financial accounts</h2>
+<p style="color:#746b8d;font-size:12px">Prototype connection layer — in a production build this would use a regulated/open-banking provider and read-only permissions.</p>
+<div class="grid three" style="margin-top:14px">
+ <div class="reco" style="cursor:pointer" onclick="connectSource('Bank')"><strong>Bank accounts</strong><p>Connect savings, salary and current accounts.</p><span class="badge" id="bankStatus">Not connected</span></div>
+ <div class="reco" style="cursor:pointer" onclick="connectSource('Stocks')"><strong>Stocks</strong><p>Bring holdings and current market value into your net worth.</p><span class="badge" id="stockStatus">Not connected</span></div>
+ <div class="reco" style="cursor:pointer" onclick="connectSource('Mutual Funds')"><strong>Mutual funds</strong><p>Track funds, allocation and goal-linked investments.</p><span class="badge" id="mfStatus">Not connected</span></div>
+</div>
+<div class="reco" style="margin-top:15px"><strong>Privacy principle</strong><p>Start with read-only access. Never store bank passwords, card PINs or OTPs in Moneta.</p></div>
+</div></div>
+
+<div class="modal" id="notificationsModal"><div class="modalbox">
+<button class="close" onclick="closeNotifications()">×</button><div class="eyebrow">Smart alerts</div><h2>Financial notifications</h2>
+<p style="color:#746b8d;font-size:12px">Alerts become more urgent as a debt payoff date approaches.</p><div id="notificationList"></div>
+</div></div>
+<div class="modal" id="profileModal"><div class="modalbox">
+<button class="close" onclick="closeProfile()">×</button><h2>Financial profile</h2><p style="color:#8ea4bd;font-size:12px">Change inputs and run the optimisation engine again.</p>
+<div class="formgrid">
+ <div class="field"><label>Monthly income (₹)</label><input id="income" type="number"></div>
+ <div class="field"><label>Monthly expenses (₹)</label><input id="expenses" type="number"></div>
+ <div class="field"><label>Liquid savings (₹)</label><input id="savings" type="number"></div>
+ <div class="field"><label>Investments (₹)</label><input id="investments" type="number"></div>
+ <div class="field"><label>Total debt (₹)</label><input id="debt" type="number"></div>
+ <div class="field"><label>Average debt interest (%)</label><input id="debtRate" type="number" step=".1"></div>
+ <div class="field"><label>Emergency target (months)</label><input id="emergencyMonths" type="number" step=".5"></div>
+ <div class="field"><label>Expected investment return (%)</label><input id="returnRate" type="number" step=".1"></div>
+ <div class="field"><label>Risk tolerance</label><select id="risk"><option value="low">Conservative</option><option value="medium">Balanced</option><option value="high">Growth</option></select></div>
+ <div class="field"><label>Age</label><input id="age" type="number"></div>
+ <div class="field formfull"><label>Monthly fixed commitments (EMI, insurance etc.) (₹)</label><input id="fixed" type="number"></div>
+</div>
+<div style="display:flex;justify-content:flex-end;gap:9px;margin-top:18px"><button class="btn" onclick="closeProfile()">Cancel</button><button class="btn primary" onclick="saveProfile()">Save & optimise</button></div>
+</div></div>
+
+<script>
+
+const API_BASE = window.MONETA_API_BASE || "/api";
+let backendReady = false;
+
+async function apiRequest(path, options={}) {
+  const response = await fetch(API_BASE + path, {
+    headers: {"Content-Type":"application/json", ...(options.headers||{})},
+    ...options
+  });
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || `API request failed: ${response.status}`);
+  }
+  return response.status === 204 ? null : response.json();
+}
+
+async function loadBackendState() {
+  try {
+    const payload = await apiRequest("/profile");
+    data = payload.profile;
+    data.goals = payload.goals;
+    data.debts = payload.debts;
+    data.connections = payload.connections;
+    backendReady = true;
+    localStorage.setItem("monetaBackendConnected", "true");
+    render();
+    updateConnectionPage();
+    renderNotificationsPage();
+  } catch (error) {
+    console.warn("Moneta backend unavailable; using local demo data.", error);
+    backendReady = false;
+    render();
+  }
+}
+
+async function saveProfileToBackend() {
+  if (!backendReady) return;
+  await apiRequest("/profile", {
+    method:"PUT",
+    body:JSON.stringify({
+      income:data.income, expenses:data.expenses, savings:data.savings,
+      investments:data.investments, debt:data.debt, debtRate:data.debtRate,
+      emergencyMonths:data.emergencyMonths, returnRate:data.returnRate,
+      risk:data.risk, age:data.age, fixed:data.fixed
+    })
+  });
+}
+
+async function getOptimisedPlanFromBackend() {
+  if (!backendReady) return calc();
+  const plan = await apiRequest("/optimise");
+  return plan;
+}
+
+async function syncGoalToBackend(goal) {
+  if (!backendReady) return;
+  const body = {
+    name:goal.name, target:Number(goal.target), saved:Number(goal.saved), months:Number(goal.months)
+  };
+  if (goal.id) {
+    await apiRequest(`/goals/${goal.id}`, {method:"PUT", body:JSON.stringify(body)});
+  } else {
+    const created = await apiRequest("/goals", {method:"POST", body:JSON.stringify(body)});
+    goal.id = created.id;
+  }
+}
+
+async function connectBackendSource(source) {
+  if (!backendReady) return;
+  await apiRequest(`/connections/${encodeURIComponent(source)}`, {method:"POST"});
+  const c = data.connections.find(x=>x.source===source);
+  if (c) c.status="Demo connected";
+  updateConnectionPage();
+}
+
+async function runScenarioBackend(type) {
+  if (!backendReady) return null;
+  return apiRequest("/scenarios", {method:"POST", body:JSON.stringify({type})});
+}
+
+async function loadBackendNotifications() {
+  if (!backendReady) return null;
+  return apiRequest("/notifications");
+}
+
+const defaultData={
+ income:85000, expenses:38000, savings:145000, investments:210000, debt:180000,
+ debtRate:12.5, emergencyMonths:6, returnRate:11, risk:"medium", age:21, fixed:9000,
+ goals:[
+  {name:"Emergency Reserve",target:228000,saved:145000,months:6},
+  {name:"Laptop Upgrade",target:120000,saved:45000,months:8},
+  {name:"Higher Studies",target:500000,saved:110000,months:30}
+ ],
+ debts:[{name:"Education Loan",balance:120000,rate:10.5,min:3500},{name:"Credit Card",balance:60000,rate:24,min:3000}]
+};
+let data=JSON.parse(localStorage.getItem("monetaData")||"null")||defaultData;
+let state={plan:null,history:JSON.parse(localStorage.getItem("monetaHistory")||"[]")};
+
+const money=n=>"₹"+Math.round(n).toLocaleString("en-IN");
+const pct=n=>Math.round(n)+"%";
+function monthsTo(target,saved,monthly){return monthly>0?Math.max(1,Math.ceil((target-saved)/monthly)):99}
+
+function calc(){
+ const surplus=Math.max(0,data.income-data.expenses-data.fixed);
+ const emergencyTarget=data.expenses*data.emergencyMonths;
+ const emergencyGap=Math.max(0,emergencyTarget-data.savings);
+ const highDebt=data.debts.filter(d=>d.rate>=data.returnRate);
+ let reserve=Math.min(surplus*.28, emergencyGap);
+ if(emergencyGap<=0) reserve=surplus*.10;
+ let debtPay=Math.min(Math.max(0,surplus*.25),data.debt>0?surplus:0);
+ if(highDebt.length) debtPay=Math.max(debtPay,surplus*.32);
+ let goalNeed=data.goals.reduce((s,g)=>s+Math.max(0,(g.target-g.saved)/Math.max(1,g.months)),0);
+ let goalAlloc=Math.min(surplus*.30,goalNeed);
+ let invest=Math.max(0,surplus-reserve-debtPay-goalAlloc);
+ if(data.risk==="low") {invest*=.65; reserve+=surplus*.05}
+ if(data.risk==="high") {invest+=surplus*.08; goalAlloc=Math.max(0,goalAlloc-surplus*.08)}
+ const cash=surplus-reserve-debtPay-goalAlloc-invest;
+ const health=Math.max(0,Math.min(100,
+   35*Math.min(1,data.savings/emergencyTarget)+
+   20*Math.min(1,Math.max(0,1-data.debt/(data.income*12)))+
+   20*Math.min(1,investmentsRatio())+
+   15*Math.min(1,goalProgress())+
+   10*(data.debtRate<=data.returnRate?1:.45)
+ ));
+ return {surplus,reserve,debtPay,goalAlloc,invest,cash,emergencyTarget,health};
+}
+function investmentsRatio(){return data.investments/Math.max(1,data.income*12)}
+function goalProgress(){return data.goals.reduce((a,g)=>a+g.saved/Math.max(1,g.target),0)/Math.max(1,data.goals.length)}
+
+
+function toggleDrawer(){document.querySelector(".sidebar").classList.toggle("open");document.getElementById("drawerOverlay").classList.toggle("show");}
+function openConnections(type){document.getElementById("connectionsModal").classList.add("open");}
+function closeConnections(){document.getElementById("connectionsModal").classList.remove("open");}
+function connectSource(source){
+ const id=source==="Bank"?"bankStatus":source==="Stocks"?"stockStatus":"mfStatus";
+ const el=document.getElementById(id); el.textContent="Demo connected"; el.className="badge good"; connectBackendSource(source);
+ updateConnectionPage();
+ flash(source+" connection added to your profile.");
+}
+function getDebtAlerts(){
+ const p=state.plan||calc(); const alerts=[];
+ data.debts.forEach(d=>{
+   const monthly=Math.max(d.min, p.debtPay*(d.rate===Math.max(...data.debts.map(x=>x.rate))?1:.35));
+   const months=Math.ceil(d.balance/Math.max(1,monthly));
+   if(months<=3) alerts.push({level:"high",title:`${d.name} — payoff is close`,text:`Estimated payoff in about ${months} month${months===1?"":"s"}. Consider preparing the final payment and redirecting that cash flow to a goal.`});
+   else if(months<=6) alerts.push({level:"medium",title:`${d.name} — payoff approaching`,text:`Estimated payoff in about ${months} months. Review your payoff plan now to avoid missing the target.`});
+   else alerts.push({level:"low",title:`${d.name} — payoff tracked`,text:`Estimated payoff in about ${months} months. Moneta will flag it when it enters the 6-month warning window.`});
+ });
+ return alerts;
+}
+function renderNotifications(){
+ const alerts=getDebtAlerts();
+ document.getElementById("alertCount").textContent=alerts.filter(a=>a.level!=="low").length;
+ document.getElementById("notificationList").innerHTML=alerts.map(a=>`<div class="notification ${a.level}"><div class="row"><strong>${a.title}</strong><span class="badge ${a.level==="high"?"warn":""}">${a.level.toUpperCase()}</span></div><p>${a.text}</p></div>`).join("");
+}
+function openNotifications(){renderNotifications();document.getElementById("notificationsModal").classList.add("open")}
+function closeNotifications(){document.getElementById("notificationsModal").classList.remove("open")}
+
+
+function updateConnectionPage(){
+ const map={Bank:"bankStatusPage",Stocks:"stockStatusPage","Mutual Funds":"mfStatusPage"};
+ Object.entries(map).forEach(([source,id])=>{
+   const el=document.getElementById(id);
+   const old=document.getElementById(source==="Bank"?"bankStatus":source==="Stocks"?"stockStatus":"mfStatus");
+   if(el&&old){el.textContent=old.textContent;el.className=old.className;}
+ });
+}
+async function renderNotificationsPage(){
+ const target=document.getElementById("notificationListPage");
+ if(!target)return;
+ let alerts=null;
+ if(backendReady){try{alerts=await loadBackendNotifications()}catch(e){console.error(e)}}
+ if(!alerts)alerts=getDebtAlerts();
+ target.innerHTML=alerts.map(a=>`<div class="notification ${a.level}"><div class="row"><strong>${a.title}</strong><span class="badge ${a.level==="high"?"warn":""}">${a.level.toUpperCase()}</span></div><p>${a.text}</p></div>`).join("");
+}
+function renderInvestmentPage(){
+ const pv=document.getElementById("portfolioValue"),sc=document.getElementById("stockCount"),mf=document.getElementById("mfCount");
+ if(pv)pv.textContent=money(data.investments);
+ if(sc)sc.textContent="—";
+ if(mf)mf.textContent="—";
+}
+
+function render(){
+ state.plan=state.plan||calc(); const p=state.plan;
+ document.getElementById("netWorth").textContent=money(data.savings+data.investments-data.debt);
+ document.getElementById("nwDelta").textContent="+"+money(p.invest+p.reserve)+" potential monthly wealth build";
+ document.getElementById("safeSpend").textContent=money(Math.max(0,p.cash));
+ document.getElementById("runway").textContent=(data.savings/Math.max(1,data.expenses)).toFixed(1)+" mo";
+ document.getElementById("runwayDelta").textContent="Target: "+data.emergencyMonths+" months";
+ document.getElementById("healthMini").textContent=Math.round(p.health)+"/100";
+ document.getElementById("healthDelta").textContent=p.health>=75?"Strong resilience":p.health>=55?"Room to improve":"Needs attention";
+ renderAllocation(); renderGoals(); renderRecommendations(); renderWealth(); renderOptimizer(); renderDebts(); renderInsights(); runScenario(); renderHistory(); renderNotifications();
+}
+function renderAllocation(){
+ const p=state.plan,total=Math.max(1,p.surplus);
+ const items=[["Emergency reserve",p.reserve,"var(--accent)"],["Debt payoff",p.debtPay,"var(--danger)"],["Goals",p.goalAlloc,"var(--warn)"],["Investments",p.invest,"var(--accent2)"],["Flexible",p.cash,"var(--purple)"]];
+ document.getElementById("allocation").innerHTML=items.map(x=>`<div class="row" style="margin:11px 0;color:#F7F8E9"><span style="font-size:12px;color:#E8ECC5">${x[0]}</span><b style="color:#F7F8E9">${money(x[1])}</b></div><div class="progress"><i style="width:${Math.min(100,x[1]/total*100)}%;background:${x[2]}"></i></div>`).join("");
+}
+function renderRecommendations(){
+ const p=state.plan, arr=[];
+ if(data.savings<p.emergencyTarget) arr.push(["Build emergency runway",`You are ${money(p.emergencyTarget-data.savings)} short of your ${data.emergencyMonths}-month safety target.`,"warn"]);
+ if(data.debtRate>data.returnRate) arr.push(["Prioritise expensive debt",`Your average debt costs ${data.debtRate}% vs ${data.returnRate}% expected investment return.`,"bad"]);
+ if(goalProgress()<.5) arr.push(["Protect goal momentum","At least one long-term goal is underfunded against its target path.","warn"]);
+ if(p.invest>0) arr.push(["Keep compounding","After safety, debt and deadlines, the engine can direct "+money(p.invest)+" / month to investments.","good"]);
+ document.getElementById("recommendations").innerHTML=arr.slice(0,4).map(a=>`<div class="reco"><div class="row"><strong>${a[0]}</strong><span class="badge ${a[2]}">${a[2]==="bad"?"HIGH":"ACTION"}</span></div><p>${a[1]}</p></div>`).join("");
+}
+function renderGoals(){
+ document.getElementById("goalsPreview").innerHTML=data.goals.map(g=>{
+   const pr=Math.min(100,g.saved/g.target*100); const need=Math.max(0,(g.target-g.saved)/Math.max(1,g.months));
+   return `<div class="goal"><div class="row"><span class="goal-name">${g.name}</span><span class="tiny">${Math.round(pr)}%</span></div><div class="progress"><i style="width:${pr}%"></i></div><div class="tiny">${money(g.saved)} / ${money(g.target)} · need ${money(need)}/mo</div></div>`;
+ }).join("");
+ document.getElementById("goalTable").innerHTML=data.goals.map(g=>{
+   const need=Math.max(0,(g.target-g.saved)/Math.max(1,g.months)), pr=Math.min(100,g.saved/g.target*100);
+   return `<tr><td><b>${g.name}</b></td><td>${money(g.target)}</td><td>${money(g.saved)}</td><td>${g.months} mo</td><td>${money(need)}</td><td><span class="badge ${pr>=60?'good':'warn'}">${pr>=60?'On track':'Needs funding'}</span></td></tr>`;
+ }).join("");
+}
+function renderWealth(){
+ const p=state.plan, base=data.savings+data.investments-data.debt;
+ const bars=document.getElementById("wealthBars"); let html="";
+ for(let i=1;i<=12;i++){const projected=base+i*(p.invest+p.reserve+p.goalAlloc-p.debtPay*.35); const baseline=base+i*(Math.max(0,data.income-data.expenses-data.fixed)*.18); const max=Math.max(projected,baseline,1); html+=`<div class="barwrap"><div class="bar b" style="height:${Math.max(3,baseline/max*82)}%"></div><div class="bar a" style="height:${Math.max(3,projected/max*82)}%"></div><span class="xlabel">${i}</span></div>`}
+ bars.innerHTML=html;
+}
+function renderOptimizer(){
+ const p=state.plan;
+ document.getElementById("optTable").innerHTML=`<table class="table"><tr><th>Bucket</th><th>Monthly</th><th>% of surplus</th></tr>${[
+ ["Emergency reserve",p.reserve],["Debt payoff",p.debtPay],["Goals",p.goalAlloc],["Investments",p.invest],["Flexible cash",p.cash]
+ ].map(x=>`<tr><td>${x[0]}</td><td class="right"><b>${money(x[1])}</b></td><td class="right">${Math.round(x[1]/Math.max(1,p.surplus)*100)}%</td></tr>`).join("")}</table>`;
+ const reasons=[];
+ if(data.savings<p.emergencyTarget) reasons.push(["Safety gap",`Build ${money(data.expenses*data.emergencyMonths-data.savings)} more emergency liquidity before aggressive investing.`]);
+ if(data.debtRate>data.returnRate) reasons.push(["Return hurdle",`Debt costs ${data.debtRate}%, above the assumed ${data.returnRate}% investment return, so debt gets extra weight.`]);
+ reasons.push(["Goal urgency",`Goal funding is calculated from target amount and remaining months, rather than a fixed generic savings rule.`]);
+ reasons.push(["Risk constraint",`Your ${data.risk} profile changes the investment weight while preserving essential reserves.`]);
+ document.getElementById("whyPlan").innerHTML=reasons.map(r=>`<div class="reco"><strong>${r[0]}</strong><p>${r[1]}</p></div>`).join("");
+ document.getElementById("riskBox").innerHTML=`<div class="pillrow"><span class="pill">Risk: ${data.risk}</span><span class="pill">Return: ${data.returnRate}%</span><span class="pill">Age: ${data.age}</span></div><p style="margin-top:15px">Investment allocation is capped/expanded by risk preference after essential obligations.</p>`;
+ document.getElementById("deadlineBox").innerHTML=data.goals.map(g=>`<div class="row" style="padding:9px 0;border-bottom:1px solid #1c3047"><span>${g.name}</span><b>${g.months} mo</b></div>`).join("");
+ document.getElementById("opportunity").innerHTML=`<div class="big">${money(p.invest)}</div><p>estimated monthly investable surplus after higher-priority obligations.</p><div class="reco"><strong>Trade-off</strong><p>Every ₹1 shifted to high-interest debt can produce a relatively predictable saving equal to the interest avoided; investments have uncertain returns.</p></div>`;
+}
+function renderDebts(){
+ const debts=[...data.debts].sort((a,b)=>b.rate-a.rate);
+ document.getElementById("debtTable").innerHTML=`<table class="table"><tr><th>Debt</th><th>Balance</th><th>APR</th><th>Min</th></tr>${debts.map(d=>`<tr><td>${d.name}</td><td>${money(d.balance)}</td><td>${d.rate}%</td><td>${money(d.min)}</td></tr>`).join("")}</table>`;
+ const total=debts.reduce((s,d)=>s+d.balance,0);
+ document.getElementById("debtPlan").innerHTML=`<div class="reco"><strong>Recommended: Avalanche</strong><p>Attack the ${debts[0]?.name||"highest-rate debt"} first because it has the highest interest cost.</p></div><div class="reco"><strong>Monthly attack budget</strong><p>${money(state.plan.debtPay)} beyond normal expenses/commitments in this model.</p></div><div class="reco"><strong>Alternative: Snowball</strong><p>Pay the smallest balance first if motivation and quick wins are more important than pure interest minimisation.</p></div>`;
+}
+function renderInsights(){
+ const p=state.plan;
+ const list=[
+  ["Cash resilience",`${(data.savings/Math.max(1,data.expenses)).toFixed(1)} months of current expenses are liquid.`],
+  ["Savings rate",`${Math.round(Math.max(0,data.income-data.expenses-data.fixed)/Math.max(1,data.income)*100)}% of income is currently available before optimisation.`],
+  ["Debt pressure",`${data.debtRate>data.returnRate?"High":"Moderate"} — debt APR is ${data.debtRate}% vs assumed investment return of ${data.returnRate}%.`],
+  ["Goal coverage",`${Math.round(goalProgress()*100)}% average goal funding across your current goals.`],
+  ["Next best action",p.reserve>0?`Direct ${money(p.reserve)} / month toward resilience.`:`Increase goal or investment funding while keeping your safety buffer intact.`]
+ ];
+ document.getElementById("insightList").innerHTML=list.map(x=>`<div class="reco"><strong>${x[0]}</strong><p>${x[1]}</p></div>`).join("");
+}
+async function runOptimisation(){
+ try{
+   state.plan = backendReady ? await getOptimisedPlanFromBackend() : calc();
+   render();
+   flash(backendReady?"Plan recalculated by Moneta backend.":"Plan recalculated locally.");
+ }catch(e){console.error(e);render();flash("Optimisation backend unavailable.");}
+}
+function flash(msg){let e=document.createElement("div");e.textContent=msg;e.style.cssText="position:fixed;right:20px;bottom:20px;background:#62e6a7;color:#06130d;padding:11px 14px;border-radius:10px;font-size:12px;font-weight:700;z-index:50";document.body.appendChild(e);setTimeout(()=>e.remove(),1800)}
+function openProfile(){
+ ["income","expenses","savings","investments","debt","debtRate","emergencyMonths","returnRate","risk","age","fixed"].forEach(k=>document.getElementById(k).value=data[k]);
+ document.getElementById("profileModal").classList.add("open");
+}
+function closeProfile(){document.getElementById("profileModal").classList.remove("open")}
+async function saveProfile(){
+ ["income","expenses","savings","investments","debt","debtRate","emergencyMonths","returnRate","age","fixed"].forEach(k=>data[k]=Number(document.getElementById(k).value)||0);
+ data.risk=document.getElementById("risk").value;
+ localStorage.setItem("monetaData",JSON.stringify(data));
+ try{
+   await saveProfileToBackend();
+   if(backendReady) state.plan=await getOptimisedPlanFromBackend();
+ }catch(e){console.error(e);flash("Backend update failed; local data kept.");}
+ closeProfile();
+ render();
+ flash(backendReady?"Profile saved to backend.":"Profile saved locally.");
+}
+async function runScenario(){
+ const select=document.getElementById("scenarioType");
+ if(!select)return;
+ const type=select.value;
+ const labels={
+  incomeDown:"Income drops 20%",expenseUp:"Expenses rise 25%",rateUp:"Debt rate rises 3%",
+  medical:"Unexpected ₹50,000 expense",goalEarly:"Goal deadline moves 3 months earlier",incomeUp:"Income increases 15%"
+ };
+ const title=labels[type]||type;
+ const base=state.plan||calc();
+ let p=null;
+ if(backendReady){
+   try{
+     p=await runScenarioBackend(title);
+   }catch(e){console.error(e);}
+ }
+ if(!p){
+   let d={...data};
+   if(type==="incomeDown")d.income*=.8;
+   if(type==="expenseUp")d.expenses*=1.25;
+   if(type==="rateUp")d.debtRate+=3;
+   if(type==="medical")d.savings=Math.max(0,d.savings-50000);
+   if(type==="goalEarly")d.goals=d.goals.map(g=>({...g,months:Math.max(1,g.months-3)}));
+   if(type==="incomeUp")d.income*=1.15;
+   const old=data; data=d; p=calc(); data=old;
+ }
+ const delta=p.health-base.health;
+ const surplusDelta=p.surplus-base.surplus;
+ const out=document.getElementById("scenarioResult");
+ if(out)out.innerHTML=`<div class="alert">${title}</div>
+ <div class="row"><span>Monthly surplus</span><b>${money(p.surplus)} <span style="color:${surplusDelta>=0?'var(--accent)':'var(--danger)'}">${surplusDelta>=0?"+":""}${money(surplusDelta)}</span></b></div>
+ <div class="row" style="margin-top:12px"><span>Emergency runway</span><b>${p.runway} mo</b></div>
+ <div class="row" style="margin-top:12px"><span>Health score</span><b>${Math.round(p.health)}/100 <span style="color:${delta>=0?'var(--accent)':'var(--danger)'}">${delta>=0?"+":""}${Math.round(delta)}</span></b></div>
+ <div class="reco"><strong>Recommended response</strong><p>${p.health<base.health?"Temporarily reduce discretionary/investment allocation and protect emergency liquidity until the shock passes.":"Use the extra capacity to accelerate your highest-priority goal or expensive debt."}</p></div>`;
+}
+async function addGoal(){
+ const name=prompt("Goal name?"); if(!name)return;
+ const target=Number(prompt("Target amount (₹)?")); if(!target)return;
+ const months=Number(prompt("Months remaining?"))||12;
+ const goal={name,target,saved:0,months};
+ try{
+   await syncGoalToBackend(goal);
+   data.goals.push(goal);
+   localStorage.setItem("monetaData",JSON.stringify(data));
+   render();
+   flash(backendReady?"Goal saved to backend.":"Goal added locally.");
+ }catch(e){console.error(e);flash("Could not save goal.");}
+}
+function renderHistory(){
+ document.getElementById("scenarioHistory").innerHTML=state.history.length?state.history.slice(-6).reverse().map(h=>`<div class="row" style="padding:10px 0;border-bottom:1px solid #1c3047"><span>${h.title}</span><span class="tiny">${h.time}</span><b>${h.score}/100</b></div>`).join(""):"No saved scenarios yet. Run simulations to build your stress-test history.";
+}
+function navigatePage(page, push=true){
+ const target=document.getElementById(page);
+ if(!target)return;
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+ target.classList.add("active");
+ document.querySelectorAll(".nav button[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
+ if(push && location.hash!=="#"+page) history.pushState({page}, "", "#"+page);
+ if(document.querySelector(".sidebar").classList.contains("open")) toggleDrawer();
+ if(page==="notifications") renderNotificationsPage();
+ if(page==="connections") updateConnectionPage();
+ if(page==="investments") renderInvestmentPage();
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+document.querySelectorAll(".nav button[data-page]").forEach(b=>b.addEventListener("click",()=>navigatePage(b.dataset.page)));
+window.addEventListener("popstate",()=>navigatePage(location.hash.slice(1)||"dashboard",false));
+window.addEventListener("hashchange",()=>navigatePage(location.hash.slice(1)||"dashboard",false));
+render();
+loadBackendState();
+</script>
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll("a, button, [role='button']").forEach(function (el) {
+    if (el.textContent.trim().toLowerCase() === "explore your finances") {
+      el.addEventListener("click", function (event) {
+        event.preventDefault();
+        window.location.assign("login.html");
+      });
+    }
+  });
+});
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const explore = document.getElementById("openSidebarHome");
+  if (explore) {
+    explore.onclick = function () {
+      window.location.href = "/login.html";
+    };
+  }
+});
+</script>
+
+</body>
+</html>

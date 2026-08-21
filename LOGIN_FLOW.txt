@@ -1,0 +1,13 @@
+MONETA LOGIN FLOW
+
+HOME
+  |
+  | Click "Explore your finances"
+  v
+LOGIN PAGE
+  |
+  | Enter valid email + 4+ character password
+  v
+OVERVIEW PAGE
+
+Direct access to Overview without login redirects to login.html.

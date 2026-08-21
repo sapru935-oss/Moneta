@@ -1,0 +1,1 @@
+function monetaLogout(){localStorage.removeItem("monetaLoggedIn");localStorage.removeItem("monetaUser");window.location.href="index.html";}

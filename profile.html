@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moneta — Edit Profile</title>
+<style>
+:root{--bg:#D4DE95;--moss:#636B2F;--deep:#3D4127;--purple:#692475;--lav:#A47DAB;--sage:#BAC095;--cream:#F7F8E9;--line:rgba(61,65,39,.18)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--deep);font-family:Inter,system-ui,sans-serif}
+.layout{min-height:100vh;display:flex}.sidebar{width:250px;background:var(--bg);border-right:1px solid var(--line);padding:28px 16px;position:sticky;top:0;height:100vh}
+.logo{font-size:25px;font-weight:850;margin:4px 12px 28px}.logo span{color:var(--purple)}.sublogo{font-size:9px;color:#59603B;letter-spacing:.8px;margin:6px 12px 28px}
+.label{font-size:10px;color:#59603B;letter-spacing:1.5px;text-transform:uppercase;padding:0 13px 7px;margin-top:15px}
+.nav a{display:block;text-decoration:none;color:var(--deep);padding:12px 14px;border-radius:12px;margin:3px 0;font-size:14px;transition:.2s}.nav a:hover{background:var(--sage);transform:translateX(5px)}.nav a.active{background:var(--moss);color:#F7F8E9}
+.user-mini{position:absolute;bottom:18px;left:16px;right:16px;background:var(--sage);border-radius:14px;padding:13px;font-size:11px}.user-mini strong{display:block;font-size:12px;margin-bottom:4px}.user-mini span{color:#59603B}
+main{flex:1;padding:35px 40px 55px;max-width:1100px}.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.eyebrow{font-size:11px;color:var(--purple);font-weight:800;letter-spacing:1.6px;text-transform:uppercase}
+h1{font-size:35px;margin:8px 0 5px}.intro{color:#59603B;font-size:13px;line-height:1.5}
+.card{background:var(--cream);border:1px solid var(--line);border-radius:19px;padding:20px;margin-top:18px;box-shadow:0 12px 30px rgba(61,65,39,.08)}
+h2{font-size:16px;margin:0 0 5px}.muted{font-size:11px;color:#59603B;margin:0 0 16px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.field label{display:block;font-size:11px;font-weight:700;margin-bottom:6px}.field input,.field select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#D4DE95;color:var(--deep);outline:none}.field input:focus,.field select:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(105,36,117,.12)}
+.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.btn{border:1px solid var(--line);background:var(--sage);color:var(--deep);padding:11px 16px;border-radius:11px;font-weight:750;cursor:pointer;text-decoration:none;transition:.2s}.btn:hover{transform:translateY(-2px)}.btn.primary{background:var(--purple);color:#fff;border-color:var(--purple)}.status{margin-top:12px;padding:11px;border-radius:10px;font-size:11px;display:none}.status.show{display:block}.status.ok{background:#E4EBC9;color:var(--deep)}.status.err{background:#E8D8D4;color:#6B4037}
+@media(max-width:760px){.layout{display:block}.sidebar{position:relative;width:auto;height:auto}.user-mini{position:static;margin-top:18px}main{padding:25px 16px}.form-grid{grid-template-columns:1fr}.top{flex-direction:column}}
+</style>
+<script>
+if(localStorage.getItem("monetaLoggedIn")!=="true"){window.location.replace("login.html");}
+</script>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+<div class="logo">Mon<span>eta</span></div><div class="sublogo">PERSONAL FINANCE OPTIMISER</div>
+<div class="label">Workspace</div><div class="nav">
+<a href="overview.html">Overview</a><a href="index.html#optimizer">Optimiser</a><a href="index.html#scenarios">What-If Lab</a><a href="index.html#goals">Goals</a><a href="index.html#debt">Debt Strategy</a><a href="insights.html">Insights</a>
+</div>
+<div class="label">Connections</div><div class="nav"><a href="index.html#connections">Connect Accounts</a><a href="index.html#investments">Stocks & Mutual Funds</a></div>
+<div class="label">Profile</div><div class="nav"><a class="active" href="profile.html">Edit Profile</a><a href="index.html#notifications">Notifications</a></div>
+<div class="user-mini"><strong id="sideUser">Your profile</strong><span>Personal financial workspace</span></div>
+</aside>
+
+<main>
+<div class="top">
+<div><div class="eyebrow">Personal Profile</div><h1>Edit your financial details.</h1><p class="intro">Enter your current financial information. Moneta will save it to the backend and use it to recalculate your optimisation, health score, goals and recommendations.</p></div>
+</div>
+
+<form id="profileForm">
+<div class="card">
+<h2>Personal & financial basics</h2><p class="muted">These details form the foundation of your financial model.</p>
+<div class="form-grid">
+<div class="field"><label>Age</label><input id="age" type="number" min="0" max="120" required></div>
+<div class="field"><label>Risk tolerance</label><select id="risk"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
+<div class="field"><label>Monthly income (₹)</label><input id="income" type="number" min="0" step="100" required></div>
+<div class="field"><label>Monthly expenses (₹)</label><input id="expenses" type="number" min="0" step="100" required></div>
+<div class="field"><label>Fixed expenses (₹)</label><input id="fixed" type="number" min="0" step="100" required></div>
+<div class="field"><label>Current savings (₹)</label><input id="savings" type="number" min="0" step="100" required></div>
+<div class="field"><label>Current investments (₹)</label><input id="investments" type="number" min="0" step="100" required></div>
+<div class="field"><label>Total debt (₹)</label><input id="debt" type="number" min="0" step="100" required></div>
+<div class="field"><label>Average debt interest rate (%)</label><input id="debtRate" type="number" min="0" step="0.1" required></div>
+<div class="field"><label>Expected investment return (%)</label><input id="returnRate" type="number" min="0" step="0.1" required></div>
+<div class="field"><label>Emergency fund target (months)</label><input id="emergencyMonths" type="number" min="0.5" step="0.5" required></div>
+</div>
+<div class="actions"><a class="btn" href="overview.html">Cancel</a><button class="btn primary" type="submit">Save profile</button></div>
+<div class="status" id="status"></div>
+</div>
+</form>
+</main>
+</div>
+
+<script>
+const fields=["age","risk","income","expenses","fixed","savings","investments","debt","debtRate","returnRate","emergencyMonths"];
+const moneyFields=["income","expenses","fixed","savings","investments","debt"];
+const status=document.getElementById("status");
+function setStatus(msg,ok=true){status.textContent=msg;status.className="status show "+(ok?"ok":"err")}
+async function load(){
+ try{
+  const r=await fetch("/api/profile"); if(!r.ok)throw new Error();
+  const p=r.json?await r.json():null;
+  const d=p.profile||p;
+  fields.forEach(k=>{if(document.getElementById(k))document.getElementById(k).value=d[k]??""});
+  document.getElementById("sideUser").textContent=localStorage.getItem("monetaUser")||"Your profile";
+ }catch(e){setStatus("Could not load your profile. Make sure the FastAPI backend is running.",false)}
+}
+document.getElementById("profileForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const body={};
+ fields.forEach(k=>body[k]=k==="risk"?document.getElementById(k).value:Number(document.getElementById(k).value));
+ try{
+  const r=await fetch("/api/profile",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(!r.ok)throw new Error(await r.text());
+  setStatus("Profile saved successfully. Moneta has recalculated your financial model.");
+  setTimeout(()=>window.location.href="overview.html",700);
+ }catch(err){console.error(err);setStatus("Could not save your profile. Check that the backend is running.",false)}
+});
+load();
+</script>
+</body>
+</html>
